@@ -1,0 +1,5 @@
+p, unauthorized, /user/register, POST
+p, unauthorized, /user/verify, POST
+p, unauthorized, /user/login, POST
+
+p, unauthorized, /swagger/*, GET

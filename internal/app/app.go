@@ -8,6 +8,7 @@ import (
 	userredis "cors/internal/infastructure/repository/redis/user"
 	userservice "cors/internal/services/user"
 	userusecase "cors/internal/usecase/user"
+	"log"
 	"log/slog"
 )
 
@@ -18,12 +19,12 @@ type App struct {
 func NewApp(logger *slog.Logger, cfg *config.Config) *App {
 	mongoDb, err := usermongodb.NewMongoDB(cfg, logger)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-
 	broker, err := producer.NewProducer(cfg)
 	if err != nil {
-		panic(err)
+
+		log.Fatal(err)
 	}
 	redis := userredis.NewRedis(cfg)
 	rep := userusecase.NewRepo(mongoDb, broker, mongoDb, mongoDb, redis)

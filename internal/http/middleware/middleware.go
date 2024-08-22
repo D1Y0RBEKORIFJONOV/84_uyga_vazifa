@@ -13,7 +13,9 @@ import (
 )
 
 func Middleware(c *gin.Context) {
+
 	allow, err := CheckPermission(c.Request)
+
 	if err != nil {
 		if valid, ok := err.(*jwt.ValidationError); ok && valid.Errors == jwt.ValidationErrorExpired {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
@@ -32,6 +34,11 @@ func Middleware(c *gin.Context) {
 		})
 		return
 	}
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+	c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	id, _ := tokens.GetIdFromToken(c.Request)
 	c.Set("user_id", id)
 	email, _ := tokens.GetEmailFromToken(c.Request)
@@ -59,10 +66,12 @@ func CheckPermission(r *http.Request) (bool, error) {
 	enforcer, err := casbin.NewEnforcer("auth.conf", "auth.csv")
 	if err != nil {
 		log.Println(err)
+		return false, err
 	}
 	allowed, err := enforcer.Enforce(role, path, method)
 	if err != nil {
 		log.Println(err)
+		return false, err
 	}
 
 	return allowed, nil

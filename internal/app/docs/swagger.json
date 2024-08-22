@@ -9,7 +9,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:9000",
+    "host": "localhost:7777",
     "basePath": "/",
     "paths": {
         "/user/login": {

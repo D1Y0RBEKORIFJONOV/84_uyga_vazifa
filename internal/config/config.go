@@ -51,7 +51,7 @@ func New() *Config {
 	config.DB.Port = getEnv("MONGO_PORT", ":27017")
 	config.DB.User = getEnv("MONGO_USER", "")
 	config.DB.Password = getEnv("MONGO_PASSWORD", "")
-	config.DB.Name = getEnv("MONGO_DATABASE", "cors")
+	config.DB.Name = getEnv("MONGO_DATABASE", "app")
 
 	config.Token.Secret = getEnv("TOKEN_SECRET", "D1YORTOP4EEK")
 	accessTTl, err := time.ParseDuration(getEnv("TOKEN_ACCESS_TTL", "1h"))
@@ -67,8 +67,8 @@ func New() *Config {
 	config.Token.RefreshTTL = refreshTTL
 
 	config.KafkaUrl = getEnv("KAFKA_URL", "broker:9092")
-	config.CreateUserTopic = getEnv("CREATE_USER_TOPIC", "USER-CREATE")
-	config.VeryFyTopic = getEnv("VEYFY_TOPIC", "VFY-VFY")
+	config.CreateUserTopic = getEnv("CREATE_USER_TOPIC", "USER_CREATE")
+	config.VeryFyTopic = getEnv("VEYFY_TOPIC", "VFY_VFY")
 	config.RedisUrl = getEnv("REDIS_URL", "redis:6379")
 	return &config
 }

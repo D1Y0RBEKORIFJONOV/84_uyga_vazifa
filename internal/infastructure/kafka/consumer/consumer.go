@@ -7,9 +7,9 @@ import (
 	userusecase "cors/internal/usecase/user"
 	"encoding/json"
 	"fmt"
-	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"log"
+	"time"
 )
 
 type Consumer struct {
@@ -20,15 +20,28 @@ type Consumer struct {
 }
 
 func NewConsumer(cfg *config.Config, user *userusecase.Repo) (*Consumer, error) {
-	consumer, err := kgo.NewClient(
-		kgo.SeedBrokers(cfg.KafkaUrl),
-		kgo.ConsumeTopics(cfg.CreateUserTopic, cfg.VeryFyTopic),
-		kgo.ConsumerGroup("1"),
+	var (
+		err      error
+		consumer *kgo.Client
 	)
 
-	err = createTopics(cfg)
+	// Попытка подключения к Kafka до 10 раз
+	for i := 0; i < 10; i++ {
+		consumer, err = kgo.NewClient(
+			kgo.SeedBrokers(cfg.KafkaUrl),
+			kgo.ConsumeTopics(cfg.CreateUserTopic, cfg.VeryFyTopic),
+			kgo.ConsumerGroup("111"), // Убедитесь, что название группы уникальное
+		)
+		if err != nil {
+			log.Printf("Error creating Kafka consumer, attempt %d: %v\n", i+1, err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
 	}
 
 	return &Consumer{
@@ -42,17 +55,26 @@ func NewConsumer(cfg *config.Config, user *userusecase.Repo) (*Consumer, error) 
 func (c *Consumer) Consume() {
 	log.Println("Consumer start")
 	ctx := context.Background()
+
 	for {
+		// Получаем сообщения из Kafka
 		fetches := c.consumer.PollFetches(ctx)
+
+		// Проверка на ошибки
 		if errs := fetches.Errors(); len(errs) > 0 {
 			for _, err := range errs {
 				log.Println("Error fetching records:", err)
 			}
 			continue
 		}
+
+		// Обрабатываем каждую партицию
 		fetches.EachPartition(func(ftp kgo.FetchTopicPartition) {
+			log.Printf("Reading from topic: %s, partition: %d\n", ftp.Topic, ftp.Partition)
+
 			for _, record := range ftp.Records {
-				fmt.Println("Partition:", record.Partition, "Value:", string(record.Value))
+				log.Printf("Partition: %d, Offset: %d, Value: %s\n", record.Partition, record.Offset, string(record.Value))
+
 				var user userentity.User
 				err := json.Unmarshal(record.Value, &user)
 				if err != nil {
@@ -60,50 +82,24 @@ func (c *Consumer) Consume() {
 					continue
 				}
 
+				// Определяем, из какого топика пришло сообщение и сохраняем пользователя
 				switch record.Topic {
 				case c.topicCreateUser:
+					log.Println("Processing CreateUser message")
 					err = c.user.SaveUserToRedis(ctx, &user)
 				case c.topicVeryFy:
+					log.Println("Processing VeryFy message")
 					err = c.user.SaveUserToMongo(ctx, &user)
 				default:
 					log.Println("Unknown topic:", record.Topic)
 					continue
 				}
 
+				// Логирование ошибок при сохранении пользователя
 				if err != nil {
 					log.Println("Error saving user:", err)
 				}
 			}
 		})
 	}
-}
-
-func createTopics(cfg *config.Config) error {
-	client, err := kgo.NewClient(
-		kgo.SeedBrokers(cfg.KafkaUrl),
-	)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	admin := kadm.NewClient(client)
-	ctx := context.Background()
-
-	topics := []string{cfg.CreateUserTopic, cfg.VeryFyTopic}
-
-	createResp, err := admin.CreateTopics(ctx, 1, 1, nil, topics...)
-	if err != nil {
-		return err
-	}
-
-	for _, ctr := range createResp.Sorted() {
-		if ctr.Err != nil {
-			log.Printf("Error creating topic %s: %v", ctr.Topic, ctr.Err)
-		} else {
-			log.Printf("Topic %s created successfully", ctr.Topic)
-		}
-	}
-
-	return nil
 }

@@ -48,7 +48,7 @@ definitions:
       secret:
         type: string
     type: object
-host: localhost:9000
+host: localhost:7777
 info:
   contact: {}
   description: This is a sample server for a restaurant reservation system.

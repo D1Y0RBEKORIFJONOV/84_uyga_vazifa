@@ -8,7 +8,10 @@ import (
 
 func main() {
 	cfg := config.New()
-	log := logger.SetupLogger(cfg.LogLevel)
+	log := logger.SetupLogger("local")
 	application := app.NewApp(log, cfg)
-	application.HTTPApp.Start()
+	err := application.HTTPApp.Server.Run(cfg.HTTPUrl)
+	if err != nil {
+		panic(err)
+	}
 }

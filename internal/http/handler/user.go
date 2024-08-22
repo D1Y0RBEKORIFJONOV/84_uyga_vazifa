@@ -5,6 +5,7 @@ import (
 	userentity "cors/internal/entity/user"
 	userusecase "cors/internal/usecase/user"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -21,7 +22,7 @@ func NewUser(user *userusecase.User) *User {
 // @title Artisan Connect
 // @version 1.0
 // @description This is a sample server for a restaurant reservation system.
-// @host localhost:9000
+// @host localhost:7777
 // @BasePath        /
 // @schemes         http
 // @securityDefinitions.apiKey ApiKeyAuth
@@ -40,16 +41,21 @@ func NewUser(user *userusecase.User) *User {
 // @Failure 500 {object} string
 // @Router /user/register [post]
 func (u *User) Register(c *gin.Context) {
+	log.Println("Starting")
 	var req *userentity.CreateUser
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Fatal(err, "HANDLERRRR sukaaaaaaaaaaaaaaaaa")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("Req", req)
 	message, err := u.user.CreateUser(c.Request.Context(), req)
 	if err != nil {
+		log.Fatal(err, "HANDLERRRR sukaaaaaaaaaaaaaaaaa")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println(message, "End")
 	c.JSON(http.StatusOK, gin.H{"message": message})
 }
 

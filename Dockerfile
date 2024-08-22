@@ -1,16 +1,17 @@
 FROM golang:1.23.0 AS builder
 
-RUN mkdir /app
+RUN mkdir app
+COPY . /app
+
 WORKDIR /app
 
-COPY . .
-
-RUN go build -o main cmd/cors/main.go
+RUN go build -o main cmd/app/main.go
 
 FROM golang:1.23.0
 
 WORKDIR /app
 
-COPY --from=builder /app/main .
+COPY --from=builder /app .
 
-CMD ["./main"]
+CMD ["/app/main"]
+

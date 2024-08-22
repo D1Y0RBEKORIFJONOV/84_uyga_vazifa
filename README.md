@@ -35,3 +35,4 @@ Bu vazifada, foydalanuvchilar uchun autentifikatsiya qilish funksiyasini `RESTfu
 
 
 # cors
+# 84_uyga_vazifa

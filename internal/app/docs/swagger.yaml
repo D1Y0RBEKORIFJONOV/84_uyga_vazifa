@@ -18,12 +18,21 @@ definitions:
       password:
         type: string
     type: object
+  userentity.Message:
+    properties:
+      create_at:
+        type: string
+      status:
+        type: string
+    type: object
   userentity.Status:
     properties:
       messages:
         items:
-          type: string
+          $ref: '#/definitions/userentity.Message'
         type: array
+      user_id:
+        type: string
     type: object
   userentity.Token:
     properties:
@@ -39,7 +48,7 @@ definitions:
       secret:
         type: string
     type: object
-host: localhost:9002
+host: localhost:9000
 info:
   contact: {}
   description: This is a sample server for a restaurant reservation system.
@@ -73,8 +82,6 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      security:
-      - ApiKeyAuth: []
       summary: Login
       tags:
       - auth
@@ -105,8 +112,6 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      security:
-      - ApiKeyAuth: []
       summary: Register
       tags:
       - auth
@@ -137,8 +142,6 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      security:
-      - ApiKeyAuth: []
       summary: VerifyUser
       tags:
       - auth

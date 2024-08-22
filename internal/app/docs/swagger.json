@@ -9,16 +9,11 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:9002",
+    "host": "localhost:9000",
     "basePath": "/",
     "paths": {
         "/user/login": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "Login  user",
                 "consumes": [
                     "application/json"
@@ -65,11 +60,6 @@
         },
         "/user/register": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "Register a new user",
                 "consumes": [
                     "application/json"
@@ -116,11 +106,6 @@
         },
         "/user/verify": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "VerifyUser a new user",
                 "consumes": [
                     "application/json"
@@ -195,14 +180,28 @@
                 }
             }
         },
+        "userentity.Message": {
+            "type": "object",
+            "properties": {
+                "create_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "userentity.Status": {
             "type": "object",
             "properties": {
                 "messages": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/userentity.Message"
                     }
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

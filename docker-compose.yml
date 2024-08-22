@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  broker:
+      image: apache/kafka:latest
+      hostname: broker
+      container_name: broker
+      ports:
+        - "9092:9092"
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:9092
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+        KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+        KAFKA_PROCESS_ROLES: broker,controller
+        KAFKA_NODE_ID: 1
+        KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
+        KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092
+        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+        KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+        CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      networks:
+        - cors-network
+      volumes:
+        - broker-data:/app/data
+
+
+  93_cors:
+    build: .
+    container_name: 93_cors_service
+    ports:
+      - "9002:9002"
+    depends_on:
+      - consumer_cors
+      - redis
+      - mongo
+      - broker
+
+    networks:
+      - cors-network
+    environment:
+      - KAFKA_BROKER_URL=broker:9092
+      - REDIS_URL=redis:6379
+      - CONTEXT_TIMEOUT=30s
+      - HTTP_PORT=:9002
+
+
+  consumer_cors:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: consumer_cors_service
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - mongo
+      - redis
+      - broker
+    networks:
+      - cors-network
+    volumes:
+      - consumer-cors-data:/app/data
+
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - cors-network
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cors-network
+    volumes:
+      - redis-data:/data
+
+networks:
+  cors-network:
+    driver: bridge
+
+volumes:
+  broker-data:
+  consumer-cors-data:
+  mongo-data:
+  redis-data:

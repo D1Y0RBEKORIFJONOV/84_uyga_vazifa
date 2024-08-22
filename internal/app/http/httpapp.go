@@ -28,25 +28,16 @@ func NewApp(logger *slog.Logger, httpUrl string, user *userusecase.User) *HttpAp
 	}
 }
 
-func (h *HttpApp) Start() {
-	const op = "HttpApp.Start"
-	log := h.Logger.With(
-		slog.String(op, "starting http app"),
-		slog.String("port", h.HTTPUrl),
-	)
-	log.Info("starting http app")
-
-	srv := &http.Server{
-		Addr:    h.HTTPUrl,
-		Handler: h.Server,
+func (app *HttpApp) Start() {
+	const op = "app.Start"
+	log := app.Logger.With(
+		slog.String(op, "Starting server"),
+		slog.String("port", app.HTTPUrl))
+	log.Info("Starting server ")
+	err := app.Server.Run(app.HTTPUrl)
+	if err != nil {
+		log.Info("Failed to start server", "error", err)
 	}
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Error(op, err)
-		}
-	}()
-
-	h.Shutdown(srv)
 }
 
 func (h *HttpApp) Shutdown(srv *http.Server) {

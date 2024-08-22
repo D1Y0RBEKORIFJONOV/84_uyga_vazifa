@@ -1,7 +1,7 @@
 package handler
 
 import (
-	_ "cors/docs"
+	_ "cors/internal/app/docs"
 	userentity "cors/internal/entity/user"
 	userusecase "cors/internal/usecase/user"
 	"github.com/gin-gonic/gin"
@@ -19,9 +19,9 @@ func NewUser(user *userusecase.User) *User {
 }
 
 // @title Artisan Connect
-// @version 3.0
+// @version 1.0
 // @description This is a sample server for a restaurant reservation system.
-// @host localhost:9002
+// @host localhost:9000
 // @BasePath        /
 // @schemes         http
 // @securityDefinitions.apiKey ApiKeyAuth
@@ -41,7 +41,7 @@ func NewUser(user *userusecase.User) *User {
 // @Router /user/register [post]
 func (u *User) Register(c *gin.Context) {
 	var req *userentity.CreateUser
-	if err := c.ShouldBindJSON(req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

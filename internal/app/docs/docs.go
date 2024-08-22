@@ -17,11 +17,6 @@ const docTemplate = `{
     "paths": {
         "/user/login": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "Login  user",
                 "consumes": [
                     "application/json"
@@ -68,11 +63,6 @@ const docTemplate = `{
         },
         "/user/register": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "Register a new user",
                 "consumes": [
                     "application/json"
@@ -119,11 +109,6 @@ const docTemplate = `{
         },
         "/user/verify": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "VerifyUser a new user",
                 "consumes": [
                     "application/json"
@@ -198,14 +183,28 @@ const docTemplate = `{
                 }
             }
         },
+        "userentity.Message": {
+            "type": "object",
+            "properties": {
+                "create_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "userentity.Status": {
             "type": "object",
             "properties": {
                 "messages": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/userentity.Message"
                     }
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -244,15 +243,15 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:9002",
+	Host:             "localhost:9000",
 	BasePath:         "/",
 	Schemes:          []string{"http"},
 	Title:            "Artisan Connect",
 	Description:      "This is a sample server for a restaurant reservation system.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
+	//LeftDelim:        "{{",
+	//RightDelim:       "}}",
 }
 
 func init() {

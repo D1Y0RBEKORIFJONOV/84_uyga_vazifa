@@ -10,6 +10,5 @@ func main() {
 	cfg := config.New()
 	log := logger.SetupLogger(cfg.LogLevel)
 	application := app.NewApp(log, cfg)
-
 	application.HTTPApp.Start()
 }

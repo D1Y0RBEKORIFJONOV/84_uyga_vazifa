@@ -1,21 +1,30 @@
 package producer
 
 import (
+	"context"
 	"cors/internal/config"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 type Producer struct {
-	producer *kafka.Producer
+	producer *kgo.Client
 }
 
 func NewProducer(cfg *config.Config) (*Producer, error) {
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": cfg.KafkaUrl,
-	})
+	producer, err := kgo.NewClient(
+		kgo.SeedBrokers(cfg.KafkaUrl),
+		kgo.AllowAutoTopicCreation(),
+	)
 	if err != nil {
 		return nil, err
 	}
+
+	ctx := context.Background()
+	err = producer.Ping(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Producer{
 		producer: producer,
 	}, nil
@@ -26,10 +35,14 @@ func (p *Producer) Close() {
 }
 
 func (p *Producer) Publish(value []byte, topicKey string) error {
-	if err := p.producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &topicKey, Partition: kafka.PartitionAny},
-		Value:          value,
-	}, nil); err != nil {
+
+	record := &kgo.Record{
+		Key:   []byte(topicKey),
+		Topic: topicKey,
+		Value: value,
+	}
+	err := p.producer.ProduceSync(context.Background(), record).FirstErr()
+	if err != nil {
 		return err
 	}
 	return nil

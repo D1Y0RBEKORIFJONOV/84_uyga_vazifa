@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log/slog"
 	"time"
 )
@@ -36,8 +37,11 @@ func (u *User) CreateUser(ctx context.Context, req *userentity.CreateUser) (*use
 
 	usr, err := u.user.GetUserOnMongoDb(ctx, "email", req.Email)
 	if err != nil {
-		log.Error("err", err)
-		return nil, err
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			log.Error("err", err)
+			return nil, err
+		}
+		log.Info("User does not exist")
 	}
 	if usr != nil {
 		return nil, errors.New("user already exists")
@@ -49,7 +53,7 @@ func (u *User) CreateUser(ctx context.Context, req *userentity.CreateUser) (*use
 		return nil, err
 	}
 	id := uuid.NewString()
-	reqByte, err := json.Marshal(&userentity.User{
+	reqByte, err := json.Marshal(userentity.User{
 		Email:      req.Email,
 		Password:   req.Password,
 		Role:       "user",
@@ -75,6 +79,11 @@ func (u *User) CreateUser(ctx context.Context, req *userentity.CreateUser) (*use
 		CreateAt: time.Now().Format("2006-01-02 15:04:05"),
 		Status:   "User created sending",
 	})
+	err = u.user.CreateStatus(ctx, status)
+	if err != nil {
+		log.Error("err", err)
+		return nil, err
+	}
 	return status, nil
 }
 
@@ -88,6 +97,7 @@ func (u *User) VeryFyUser(ctx context.Context, req *userentity.VerifyRequest) (*
 	usr, err := u.user.GetUserOnRedis(ctx, req.Email)
 	if err != nil {
 		log.Error("err", err)
+
 		return nil, err
 	}
 	if usr == nil {
